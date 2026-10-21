@@ -1,0 +1,21 @@
+{
+    "incident_id": "nb_test_standard",
+    "source_video": "..\\data\\incident_timing\\videos\\stream_fixture_60s.mp4",
+    "incident_start_seconds": 30.0,
+    "incident_end_seconds": 35.0,
+    "clip_start_seconds": 20.0,
+    "clip_end_seconds": 45.0,
+    "duration_seconds": 25.062,
+    "frames_count": 401,
+    "fps": 16.0,
+    "pre_truncated": false,
+    "post_truncated": false,
+    "model_confidence_score": 0.85,
+    "sha256_hash": "f71af7b3adf7b66855931eb1fd0fcc541acf3ec2bf3a2b50af671dfa6fb0cae9",
+    "sha256_verified": true,
+    "timestamp": 1792562302,
+    "evidence_clip_file": "evidence_nb_test_standard.mp4",
+    "evidence_clip_path": "../evidence\\evidence_nb_test_standard.mp4",
+    "clip_id": "evidence_nb_test_standard",
+    "video_file": "evidence_nb_test_standard.mp4"
+}

@@ -1,0 +1,3 @@
+video_id,video_path,incident_start_seconds,incident_end_seconds,label,source
+stream_fixture_60s,data/incident_timing/videos/stream_fixture_60s.mp4,30.0,35.0,violence,controlled_synthetic_benchmark
+stream_fixture_20s_early,data/incident_timing/videos/stream_fixture_20s_early.mp4,3.0,8.0,violence,controlled_early_onset_benchmark

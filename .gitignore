@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Caches and checkpoints
+.pytest_cache/
+.ipynb_checkpoints/
+.tempmediaStorage/
+
+# Large Datasets & Archives (Never commit raw datasets to git)
+data/*.zip
+data/*.tar*
+data/raw/
+data/processed/
+
+# Ignore dynamic timestamped uploads in sample_videos
+data/sample_videos/*_1792*
+data/sample_videos/10) _ Movieclips.mp4
+data/sample_videos/ANIMAL_Movie_Scene*
+
+# Evidence Vault Generated Clips (keep fixtures & ledger)
+evidence/clip_*
+evidence/*.h264_tmp.mp4
+test_vault/
+multi_step_test/
+
+# Scratch & Temporary Testing Directories
+scratch/
+backup_pre_rebuild/
+eval_out/
+
+# Virtual Environments
+venv/
+env/
+.env
+*.env
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

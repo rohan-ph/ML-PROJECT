@@ -1,0 +1,19 @@
+{
+    "incident_id": "test_suite_early",
+    "source_video": "data/incident_timing/videos/stream_fixture_20s_early.mp4",
+    "incident_start_seconds": 3.0,
+    "incident_end_seconds": 8.0,
+    "clip_start_seconds": 0.0,
+    "clip_end_seconds": 18.0,
+    "duration_seconds": 18.062,
+    "frames_count": 289,
+    "fps": 16.0,
+    "pre_truncated": true,
+    "post_truncated": false,
+    "model_confidence_score": 0.85,
+    "sha256_hash": "54e91eb71643271e950bf6faa1219918506f1badbaaa01b6f5d0247dd579c219",
+    "sha256_verified": true,
+    "timestamp": 1792601893,
+    "evidence_clip_file": "evidence_test_suite_early.mp4",
+    "evidence_clip_path": "evidence\\evidence_test_suite_early.mp4"
+}

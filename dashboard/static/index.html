@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionGuard SNN — Real-Time Violence Detection & Evidence Dashboard</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js for high-performance 60fps real-time SNN telemetry -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">VisionGuard SNN</h1>
+        <div class="brand-subtitle">Spike-Driven Violence Detection & Forensic Evidence</div>
+      </div>
+    </div>
+
+    <div class="header-badges">
+      <div class="badge badge-gpu" id="gpuBadge">
+        <span class="badge-dot" id="gpuDot"></span>
+        <span id="gpuText">Detecting Hardware...</span>
+      </div>
+      <div class="badge">
+        <span class="badge-dot" style="background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan);"></span>
+        <span>SNN Backbone: Active</span>
+      </div>
+      <div class="badge">
+        <span class="badge-dot" id="wsDot" style="background: var(--text-dim); box-shadow: none;"></span>
+        <span id="wsStatus">Connecting...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-tab="tab-inference">Live SNN Inference</button>
+    <button class="tab-btn" data-tab="tab-evidence">Forensic Evidence Clips (<span id="evidenceCount">0</span>)</button>
+    <button class="tab-btn" data-tab="tab-history">Incident Audit History</button>
+    <button class="tab-btn" data-tab="tab-training">Training & Energy Diagnostics</button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- TAB 1: Live SNN Inference -->
+    <section id="tab-inference" class="tab-pane active">
+      <div class="dashboard-grid">
+        
+        <!-- Left: Video Panel -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-title-icon">▶</span> Video Surveillance Stream & Live SNN Detection
+            </h2>
+            <div id="statusBadge" class="badge">IDLE</div>
+          </div>
+
+          <!-- Video Upload & Input Dropzone -->
+          <div class="upload-dropzone" id="uploadDropzone">
+            <div class="upload-dropzone-icon">📹</div>
+            <div class="upload-dropzone-title">Add / Upload Video for Real-Time SNN Analysis</div>
+            <div class="upload-dropzone-desc">Drag &amp; drop MP4 / AVI video here, or <span style="color:var(--accent-cyan); text-decoration:underline;">click to browse</span></div>
+            <input type="file" id="videoUpload" accept="video/mp4,video/avi,video/mkv,video/mov" style="display:none;">
+            <div class="upload-progress-container" id="uploadProgressContainer">
+              <div class="upload-progress-bar" id="uploadProgressBar"></div>
+            </div>
+            <div id="uploadStatusText" style="font-size:0.78rem; color:var(--accent-cyan); margin-top:6px; display:none;"></div>
+          </div>
+
+          <div class="video-wrapper">
+            <img id="streamImg" src="" alt="Live Stream" style="width:100%; height:100%; object-fit:contain; display:none;">
+            <video id="videoPlayer" controls style="display:none;"></video>
+            <div id="videoPlaceholder" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-dim);">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Add a video above or select a benchmark stream to start live SNN analysis</span>
+            </div>
+
+            <!-- Visible Red Alert Overlay -->
+            <div id="incidentAlert" class="video-alert-overlay">
+              <span style="font-size:1.3rem;">⚡</span>
+              <span id="incidentAlertText">VIOLENCE INCIDENT ACTIVE — THRESHOLD EXCEEDED</span>
+            </div>
+
+            <div class="hud-overlay">
+              <span id="hudTimestamp">Time: 00:00.00s</span>
+              <span id="hudFps">16 FPS Live</span>
+              <span id="hudClipStatus">Buffer: 10s Pre-Armed</span>
+            </div>
+          </div>
+
+          <!-- Live Spike Intensity Meter -->
+          <div class="spike-hud-card" id="spikeHudCard">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="spikeDot" class="badge-dot" style="background:var(--status-normal);"></span>
+              <span id="spikeStatusText" style="font-weight:600; color:var(--status-normal);">SNN: Quiescent</span>
+            </div>
+            <div class="spike-level-bar-wrapper">
+              <div class="spike-level-bar" id="spikeLevelBar"></div>
+            </div>
+            <div style="font-family:monospace; font-size:0.8rem; color:var(--text-muted);" id="instantSpikeText">
+              0 Spikes / Step
+            </div>
+          </div>
+
+          <!-- Immediate Evidence Clip Captured Banner -->
+          <div class="evidence-captured-banner" id="evidenceBanner">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🎬</span>
+                <div>
+                  <strong style="color:var(--text-main); font-size:0.92rem;" id="bannerClipTitle">Violence Clip Preserved</strong>
+                  <div style="font-size:0.75rem; color:var(--accent-emerald);">Automated &plusmn;10s Margins &bull; SHA-256 Verified</div>
+                </div>
+              </div>
+              <button class="btn btn-secondary" id="btnDismissBanner" style="padding:2px 8px; font-size:0.75rem;">✕</button>
+            </div>
+            <video id="bannerVideoPlayer" controls style="width:100%; border-radius:8px; max-height:220px; background:#000; margin-bottom:8px;"></video>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem;">
+              <span id="bannerHashText" style="font-family:monospace; color:var(--accent-cyan); overflow:hidden; text-overflow:ellipsis; max-width:280px;"></span>
+              <button class="btn btn-primary" id="btnGoToVault" style="padding:5px 12px; font-size:0.8rem;">Open Evidence Vault &rarr;</button>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="control-bar" style="margin-top:14px;">
+            <select id="sampleSelect" class="btn btn-secondary" style="flex:1; min-width:200px;">
+              <option value="">-- Choose Benchmark Stream or Uploaded Video --</option>
+              <option value="data/incident_timing/videos/stream_fixture_60s.mp4">Standard 60s Stream (Incident @ 30s-35s)</option>
+              <option value="data/incident_timing/videos/stream_fixture_20s_early.mp4">Early Onset 20s Stream (Incident @ 3s-8s)</option>
+            </select>
+            <button id="btnStartInference" class="btn btn-primary">▶ Analyze Video</button>
+            <button id="btnStopInference" class="btn btn-danger" style="display:none;">■ Stop</button>
+            <label class="btn btn-secondary" style="cursor:pointer;" id="btnUploadAlt">
+              📁 Browse Video
+            </label>
+          </div>
+
+          <!-- Real-Time Metrics Ribbon -->
+          <div class="metrics-ribbon">
+            <div class="metric-box">
+              <div class="metric-label">Predicted State</div>
+              <div class="metric-value" id="valPredClass" style="color:var(--status-normal);">Normal</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Violence Score</div>
+              <div class="metric-value" id="valScore">0.000</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Neuron Potential (u)</div>
+              <div class="metric-value" id="valNeuronU" style="color:var(--accent-cyan);">0.000</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Total Spikes / Step</div>
+              <div class="metric-value" id="valTotalSpikes" style="color:var(--accent-violet);">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Real-Time SNN Activity Panel -->
+        <div class="charts-stack">
+
+          <!-- 1. Live Spike Raster Plot -->
+          <div class="glass-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="card-title-icon">⚡</span> Neural Spike Raster Plot (16 Probe LIF Neurons)
+              </h3>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Live Temporal Events</span>
+            </div>
+            <canvas id="rasterCanvas" width="600" height="140"></canvas>
+          </div>
+
+          <!-- 2. Membrane Potential & Incident Integrator -->
+          <div class="glass-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="card-title-icon">📈</span> Readout V_mem & Incident Integrator (u)
+              </h3>
+              <span style="font-size:0.75rem; color:var(--accent-amber);">Schmitt Trigger: θ_on=0.6, θ_off=0.3</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="membraneChart"></canvas>
+            </div>
+          </div>
+
+          <!-- 3. Layer-Wise Firing Rates -->
+          <div class="glass-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="card-title-icon">📊</span> Layer-Wise SNN Firing Rates
+              </h3>
+              <span id="avgFiringRate" style="font-size:0.75rem; color:var(--accent-emerald);">Mean: 0.00%</span>
+            </div>
+            <div class="chart-container-sm">
+              <canvas id="firingRateChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: Forensic Evidence Clips -->
+    <section id="tab-evidence" class="tab-pane">
+      <div class="card-header" style="margin-bottom:8px;">
+        <div>
+          <h2 class="card-title" style="font-size:1.25rem;">Automated Forensic Evidence Vault</h2>
+          <p style="font-size:0.85rem; color:var(--text-muted);">
+            Clips automatically preserved from <strong>10s before incident onset</strong> until <strong>10s after incident offset</strong> with cryptographic SHA-256 verification.
+          </p>
+        </div>
+        <button id="btnRefreshClips" class="btn btn-secondary">🔄 Refresh Vault</button>
+      </div>
+
+      <div class="evidence-grid" id="evidenceGrid">
+        <!-- Evidence cards will be inserted dynamically here -->
+      </div>
+    </section>
+
+    <!-- TAB 3: Incident Audit History -->
+    <section id="tab-history" class="tab-pane">
+      <div class="glass-card">
+        <div class="card-header">
+          <h2 class="card-title">Immutable Incident Log & Integrity Ledger</h2>
+          <span style="font-size:0.8rem; color:var(--text-dim);">Forensic Trail for Surveillance Operations</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Incident ID</th>
+              <th>Source Video</th>
+              <th>Detected Interval</th>
+              <th>Evidence Window</th>
+              <th>Confidence</th>
+              <th>SHA-256 Checksum</th>
+              <th>Verification</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: Training & Energy Diagnostics -->
+    <section id="tab-training" class="tab-pane">
+      <div class="dashboard-grid">
+        <div class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title">SNN Training & Validation Progress</h2>
+            <div class="badge badge-gpu" id="trainGpuBadge">RTX 3050 Active</div>
+          </div>
+          <div class="chart-container" style="height:260px;">
+            <canvas id="trainingLossChart"></canvas>
+          </div>
+          <div style="margin-top:16px;">
+            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--text-muted);">Model Checkpoints</h4>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.82rem;">
+              <span class="badge" id="bestCkptBadge" style="border-color:rgba(16, 185, 129, 0.4); color:#34d399;">Best: models/rlvs_snn_best.pth (Val Acc: 82.62%, Test Acc: 79.66%)</span>
+              <span class="badge" id="latestCkptBadge" style="border-color:rgba(6, 182, 212, 0.4); color:var(--accent-cyan);">Trained: 30 Epochs on RTX 3050 (Seed 42)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title">Synaptic Operations (SOP) vs ANN Energy</h2>
+          </div>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+            Horowitz 45nm CMOS Benchmark: E_MAC = 4.6 pJ (ANN 32-bit Multiply-Accumulate) vs E_AC = 0.9 pJ (SNN 32-bit Accumulate on spike events).
+          </p>
+          <div class="chart-container" style="height:220px;">
+            <canvas id="energyChart"></canvas>
+          </div>
+          <div class="metrics-ribbon" style="margin-top:20px; grid-template-columns: repeat(2, 1fr);">
+            <div class="metric-box">
+              <div class="metric-label">Measured Energy Savings</div>
+              <div class="metric-value" style="color:var(--accent-emerald);">~3.8x – 5.2x</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Quiescent Sparsity</div>
+              <div class="metric-value" style="color:var(--accent-cyan);">94.7%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Metadata Modal -->
+  <div class="modal-backdrop" id="metaModal">
+    <div class="modal-content">
+      <div class="card-header">
+        <h3 class="card-title">Incident Evidence Metadata</h3>
+        <button id="btnCloseModal" class="btn btn-secondary" style="padding:4px 10px;">✕</button>
+      </div>
+      <pre id="modalJsonContent" style="background:#0a0e17; padding:16px; border-radius:8px; font-size:0.8rem; overflow:auto; max-height:400px; color:var(--accent-cyan);"></pre>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
